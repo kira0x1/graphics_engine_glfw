@@ -1,6 +1,8 @@
 ﻿#include <glad/glad.h>
 #include <GLFW/glfw3.h>
+
 #include <iostream>
+#include <cmath>
 
 const char *vertexShaderSource = "#version 420 core\n"
                                  "layout (location = 0) in vec3 aPos;\n"
@@ -11,9 +13,10 @@ const char *vertexShaderSource = "#version 420 core\n"
 
 const char *fragmentShaderSource = "#version 420 core\n"
                                    "out vec4 FragColor;\n"
+                                   "uniform vec4 ourColor;\n"
                                    "void main()\n"
                                    "{\n"
-                                   "	FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);"
+                                   "	FragColor = ourColor;"
                                    "}\0";
 
 const unsigned int SCRN_WIDTH = 640;
@@ -157,15 +160,26 @@ int main() {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-
+        // ACTIVATE SHADER
+        // --------
         glUseProgram(shaderProgram);
+
+        // UPDATE UNIFORM COLOR
+        // --------------------
+        float timeValue = glfwGetTime();
+        float greenValue = sin(timeValue) / 2.0f + 0.5f;
+        int vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
+        glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
+
+
+        // RENDER TRIANGLE
+        // ---------------
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
         // swap buffers and handle I/O
         glfwSwapBuffers(window);
         glfwPollEvents();
-
     }
 
     glfwTerminate();
@@ -184,10 +198,6 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
         wireframeModeOn = !wireframeModeOn;
         std::cout << "Setting wireframe mode: " << std::boolalpha << wireframeModeOn << std::endl;
         setWireframeMode(wireframeModeOn);
-    }
-
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-        glfwSetWindowShouldClose(window, true);
     }
 }
 
