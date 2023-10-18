@@ -25,7 +25,7 @@ void processInput(GLFWwindow *window);
 
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
 
-void setWireframeMode(bool wireframeOn);
+void setWireframeMode(int wireframeOn);
 
 bool wireframeModeOn = false;
 
@@ -40,8 +40,8 @@ int main() {
 #endif
 
     // Create Window
-    GLFWwindow *window = glfwCreateWindow(SCRN_WIDTH, SCRN_HEIGHT, "meow", NULL, NULL);
-    if (window == NULL) {
+    GLFWwindow *window = glfwCreateWindow(SCRN_WIDTH, SCRN_HEIGHT, "meow", nullptr, nullptr);
+    if (window == nullptr) {
         std::cout << "Failed to create glfw window!" << std::endl;
         glfwTerminate();
         return -1;
@@ -63,7 +63,7 @@ int main() {
     // VERTEX SHADER
     unsigned int vertexShader;
     vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+    glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr);
     glCompileShader(vertexShader);
 
     // Check for compile-time errors
@@ -71,7 +71,7 @@ int main() {
     char infoLog[512];
     glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
     if (!success) {
-        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+        glGetShaderInfoLog(vertexShader, 512, nullptr, infoLog);
         std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
     }
     // FRAGMENT SHADER
@@ -101,9 +101,9 @@ int main() {
         glGetProgramInfoLog(shaderProgram, 512, nullptr, infoLog);
         std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
     }
+
     //glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     //glEnableVertexAttribArray(0);
-
     //glUseProgram(shaderProgram);
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
@@ -185,6 +185,10 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
         std::cout << "Setting wireframe mode: " << std::boolalpha << wireframeModeOn << std::endl;
         setWireframeMode(wireframeModeOn);
     }
+
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+        glfwSetWindowShouldClose(window, true);
+    }
 }
 
 // called when window size is changed
@@ -193,7 +197,7 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
     glViewport(0, 0, width, height);
 }
 
-void setWireframeMode(bool wireframeOn) {
+void setWireframeMode(int wireframeOn) {
     if (wireframeOn) {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     } else {
