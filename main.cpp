@@ -1,7 +1,7 @@
 ﻿#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#include "SHADER.h"
+#include "shaders/SHADER.h"
 
 #include <iostream>
 #include <cmath>
@@ -49,7 +49,7 @@ int main() {
 
     glViewport(0, 0, SCRN_WIDTH, SCRN_HEIGHT);
 
-    Shader ourShader("../vertex_shader.glsl", "../fragment_shader.glsl");
+    Shader ourShader("../shaders/vertex_shader.glsl", "../shaders/fragment_shader.glsl");
 
     // -------------------- SHADER COMPILATION END---------------------------
     // @formatter:off
