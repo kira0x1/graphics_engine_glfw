@@ -16,5 +16,6 @@ set(graphics_engine_glfw main.cpp)
 
 add_subdirectory(glad)
 
-add_executable(graphics_engine_glfw main.cpp)
+add_executable(graphics_engine_glfw main.cpp
+        SHADER.h)
 target_link_libraries(graphics_engine_glfw ${OPENGL_LIBRARIES} glfw glad)
