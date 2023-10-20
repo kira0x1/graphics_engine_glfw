@@ -1,10 +1,7 @@
-﻿#include <glad/glad.h>
+﻿#include <Glad/glad.h>
 #include <GLFW/glfw3.h>
-
-#include "shaders/SHADER.h"
-
+#include "SHADER.h"
 #include <iostream>
-#include <cmath>
 
 const unsigned int SCRN_WIDTH = 800;
 const unsigned int SCRN_HEIGHT = 600;
@@ -36,6 +33,7 @@ int main() {
         glfwTerminate();
         return -1;
     }
+
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetKeyCallback(window, key_callback);
@@ -49,7 +47,7 @@ int main() {
 
     glViewport(0, 0, SCRN_WIDTH, SCRN_HEIGHT);
 
-    Shader ourShader("../shaders/vertex_shader.glsl", "../shaders/fragment_shader.glsl");
+    Shader ourShader("../../shaders/vertex_shader.glsl", "../../shaders/fragment_shader.glsl");
 
     // -------------------- SHADER COMPILATION END---------------------------
     // @formatter:off

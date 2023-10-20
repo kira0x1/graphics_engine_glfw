@@ -5,7 +5,7 @@
 #ifndef GRAPHICS_ENGINE_GLFW_SHADER_H
 #define GRAPHICS_ENGINE_GLFW_SHADER_H
 
-#include <glad/glad.h>
+#include "glad/glad.h"
 
 #include <string>
 #include <fstream>
@@ -58,8 +58,6 @@ public:
         // 2. compile shaders
         unsigned int vertex;
         unsigned int fragment;
-        int success;
-        char infoLog[512];
 
         // vertex shader
         vertex = glCreateShader(GL_VERTEX_SHADER);
@@ -103,7 +101,7 @@ public:
     }
 
 private:
-    void checkCompileErrors(unsigned int shader, std::string type) {
+    static void checkCompileErrors(unsigned int shader, const std::string &type) {
         int success;
         char infoLog[1024];
         if (type != "PROGRAM") {
