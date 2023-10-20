@@ -3,8 +3,8 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#include "stb_image.h"
-#include "SHADER.h"
+#include "headers/stb_image.h"
+#include "headers/SHADER.h"
 
 #include <iostream>
 

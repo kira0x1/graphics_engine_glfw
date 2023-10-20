@@ -382,7 +382,7 @@ enum {
     STBI_rgb_alpha = 4
 };
 
-#include <stdlib.h>
+#include <c++/stdlib.h>
 
 typedef unsigned char stbi_uc;
 typedef unsigned short stbi_us;
@@ -585,12 +585,12 @@ STBIDEF int stbi_zlib_decode_noheader_buffer(char *obuffer, int olen, const char
 
 #include <stdarg.h>
 #include <stddef.h> // ptrdiff_t on osx
-#include <stdlib.h>
+#include <c++/stdlib.h>
 #include <string.h>
 #include <limits.h>
 
 #if !defined(STBI_NO_LINEAR) || !defined(STBI_NO_HDR)
-#include <math.h>  // ldexp, pow
+#include <c++/math.h>  // ldexp, pow
 #endif
 
 #ifndef STBI_NO_STDIO

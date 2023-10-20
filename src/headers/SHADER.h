@@ -7,10 +7,10 @@
 
 #include "glad/glad.h"
 
-#include <string>
-#include <fstream>
-#include <sstream>
-#include <iostream>
+#include <c++/string>
+#include <c++/fstream>
+#include <c++/sstream>
+#include <c++/iostream>
 
 class Shader {
 public:
