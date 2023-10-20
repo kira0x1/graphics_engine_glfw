@@ -1,23 +1,25 @@
-﻿#include "stb_image.h"
+﻿#define GLFW_INCLUDE_NONE
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+
+#include "stb_image.h"
 #include "SHADER.h"
+
 #include <iostream>
 
 const unsigned int SCRN_WIDTH = 800;
 const unsigned int SCRN_HEIGHT = 600;
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
-
-void processInput(GLFWwindow *window);
-
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
-
 void setWireframeMode(int wireframeOn);
+void error_callback(int error, const char *description);
 
 bool wireframeModeOn = false;
 
 int main() {
+    glfwSetErrorCallback(error_callback);
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
@@ -130,16 +132,10 @@ int main() {
     // --------------
     bool shouldReverse = false;
     while (!glfwWindowShouldClose(window)) {
-
-        // INPUT
-        // -----
-        processInput(window);
-
         // RENDER
         // ------
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClearColor(0.3f, 0.25f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
-
 
 
 //        // UPDATE UNIFORM COLOR
@@ -175,19 +171,18 @@ int main() {
     return 0;
 }
 
-void processInput(GLFWwindow *window) {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-        std::cout << "\nExiting via escape key\n";
-        glfwSetWindowShouldClose(window, true);
-    }
-}
-
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
     if (key == GLFW_KEY_W && action == GLFW_PRESS) {
         wireframeModeOn = !wireframeModeOn;
         std::cout << "Setting wireframe mode: " << std::boolalpha << wireframeModeOn << std::endl;
         setWireframeMode(wireframeModeOn);
     }
+
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+        std::cout << "\nExiting via escape key\n";
+        glfwSetWindowShouldClose(window, GLFW_TRUE);
+    }
+
 }
 
 // called when window size is changed
@@ -202,4 +197,8 @@ void setWireframeMode(int wireframeOn) {
     } else {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
+}
+
+void error_callback(int error, const char *description) {
+    fprintf(stderr, "Error: %s\n", description);
 }
