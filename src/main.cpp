@@ -53,13 +53,13 @@ int main() {
 
     glViewport(0, 0, SCRN_WIDTH, SCRN_HEIGHT);
 
-    Shader ourShader("../../shaders/vertex_shader.glsl", "../../shaders/fragment_shader.glsl");
+    Shader ourShader("../../src/shaders/vertex_shader.glsl", "../../src/shaders/fragment_shader.glsl");
 
 
     // -------------------- SHADER COMPILATION END---------------------------
     // @formatter:off
     float vertices[] = {
-            // positions           // texture coords
+            // positions     // texture coords
              0.5f,   0.5f,  0.0f,  1.0f, 1.0f, // top right
              0.5f,  -0.5f,  0.0f,  1.0f, 0.0f, // bottom right
             -0.5f,  -0.5f,  0.0f,  0.0f, 0.0f, // bottom left
@@ -186,7 +186,6 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
         std::cout << "\nExiting via escape key\n";
         glfwSetWindowShouldClose(window, GLFW_TRUE);
     }
-
 }
 
 // called when window size is changed
