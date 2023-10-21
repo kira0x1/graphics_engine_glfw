@@ -136,26 +136,34 @@ int main() {
         glClearColor(0.3f, 0.25f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-
         // BIND TEXTURE
         // ------------
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture1);
 
-        // CREATE TRANSFORMATIONS
-        // ----------------------
-        glm::mat4 transform = glm::mat4(1.0f);
-        transform = glm::translate(transform, glm::vec3(0.25f, -0.25f, 0.0f));
-        transform = glm::rotate(transform, (float) glfwGetTime(), glm::vec3(0.0, 0.0, 1.0));
-
-        // RENDER TRIANGLE
+        // activate shader
         // ---------------
         ourShader.use();
 
-        // do transformations
-        unsigned int transformLoc = glGetUniformLocation(ourShader.ID, "transform");
-        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
+        // create transformations
+        // ----------------------
+        glm::mat4 model = glm::mat4(1.0f);
+        glm::mat4 view = glm::mat4(1.0f);
+        glm::mat4 projection = glm::mat4(1.0f);
 
+        model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+        projection = glm::perspective(glm::radians(45.0f), (float) SCRN_WIDTH / (float) SCRN_HEIGHT, 0.1f, 100.0f);
+
+        // get matrix uniform locations
+        unsigned int modelLoc = glGetUniformLocation(ourShader.ID, "model");
+        unsigned int viewLoc = glGetUniformLocation(ourShader.ID, "view");
+
+        // pass matricies to shader
+        ourShader.setMat4("model", model);
+        ourShader.setMat4("view", view);
+        ourShader.setMat4("projection", projection);
+        
         // render container
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
