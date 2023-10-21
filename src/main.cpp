@@ -151,11 +151,20 @@ int main() {
     } else {
         std::cout << "Failed to load a texture" << std::endl;
     }
-
     stbi_image_free(data);
 
     ourShader.use();
     ourShader.setInt("containerTexture", 0);
+
+    glm::vec3 cubePositions[] = {
+            glm::vec3(0.0f, 0.0f, 0.0f),
+            glm::vec3(3.0f, 2.0f, -5.0f),
+            glm::vec3(-1.5f, -2.2f, -2.5f),
+            glm::vec3(-2.5f, 2.2f, -4.5f),
+            glm::vec3(2.0f, -1.0f, -2.5f),
+    };
+
+    unsigned int cubePosLength = sizeof(cubePositions) / sizeof(cubePositions[0]);
 
     // RENDER LOOP :3
     // --------------
@@ -176,22 +185,29 @@ int main() {
 
         // create transformations
         // ----------------------
-        glm::mat4 model = glm::mat4(1.0f);
         glm::mat4 view = glm::mat4(1.0f);
         glm::mat4 projection = glm::mat4(1.0f);
 
-        model = glm::rotate(model, (float) glfwGetTime() * glm::radians(50.0f), glm::vec3(0.25f, 1.0f, 0.0f));
         view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
         projection = glm::perspective(glm::radians(45.0f), (float) SCRN_WIDTH / (float) SCRN_HEIGHT, 0.1f, 100.0f);
 
         // pass matricies to shader
-        ourShader.setMat4("model", model);
         ourShader.setMat4("view", view);
         ourShader.setMat4("projection", projection);
 
         // render container
         glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+
+        for (unsigned int i = 0; i < cubePosLength; i++) {
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, cubePositions[i]);
+            float angle = (i + 1) * 20.0f * glfwGetTime(); // NOLINT(*-narrowing-conversions)
+            model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+            ourShader.setMat4("model", model);
+
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
+
 
         // swap buffers and handle I/O
         glfwSwapBuffers(window);
