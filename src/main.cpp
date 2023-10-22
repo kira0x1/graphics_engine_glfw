@@ -69,6 +69,21 @@ int main() {
     glfwSetWindowAspectRatio(window, 16, 9);
     glfwShowWindow(window);
 
+    // set icons
+    GLFWimage winIcons[4];
+    winIcons[0].pixels = stbi_load("../../resources/icons/gll_logo_96.png", &winIcons[0].width, &winIcons[0].height, nullptr, 4);
+    winIcons[1].pixels = stbi_load("../../resources/icons/gll_logo_48.png", &winIcons[1].width, &winIcons[1].height, nullptr, 4);
+    winIcons[2].pixels = stbi_load("../../resources/icons/gll_logo_32.png", &winIcons[2].width, &winIcons[2].height, nullptr, 4);
+    winIcons[3].pixels = stbi_load("../../resources/icons/gll_logo_16.png", &winIcons[3].width, &winIcons[3].height, nullptr, 4);
+
+    glfwSetWindowIcon(window, 4, winIcons);
+
+    // free image from memory
+    stbi_image_free(winIcons[0].pixels);
+    stbi_image_free(winIcons[1].pixels);
+    stbi_image_free(winIcons[2].pixels);
+    stbi_image_free(winIcons[3].pixels);
+
     // GLAD: Load OpenGL function pointers
     // -----------------------------------
     if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress)) {
