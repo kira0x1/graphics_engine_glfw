@@ -44,6 +44,7 @@ int main() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
     // hide window until done setting up I.E changing position etc
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
@@ -225,9 +226,20 @@ int main() {
         // ---------------
         ourShader.use();
 
-        // create transformations
-        // ----------------------
-        glm::mat4 view = glm::mat4(1.0f);
+        // CAMERA
+        // ------
+        glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+        glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
+        glm::vec3 cameraDirection = glm::normalize(cameraPos - cameraTarget);
+
+        glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
+        glm::vec3 cameraRight = glm::normalize(glm::cross(up, cameraDirection));
+        glm::vec3 cameraUp = glm::cross(cameraDirection, cameraRight);
+
+        // TRANSFORMATIONS
+        // ---------------
+        glm::mat4 view = glm::lookAt(cameraPos, cameraTarget, cameraUp);
+
         glm::mat4 projection = glm::mat4(1.0f);
 
         view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
@@ -275,6 +287,32 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
         std::cout << "\nExiting via escape key\n";
         glfwSetWindowShouldClose(window, GLFW_TRUE);
+    }
+
+    int leftAltState = glfwGetKey(window, GLFW_KEY_LEFT_ALT);
+    int enterState = glfwGetKey(window, GLFW_KEY_ENTER);
+
+    if (leftAltState == GLFW_PRESS && enterState == GLFW_PRESS) {
+        const char *windowString = "window is windowed\nswitching to fullscreen mode";
+
+        // returns null if windowed, and a monitor if fullscreen
+        GLFWmonitor *windowMonitor = glfwGetWindowMonitor(window);
+        GLFWmonitor *primaryMonitor = glfwGetPrimaryMonitor();
+        const GLFWvidmode *videoMode = glfwGetVideoMode(primaryMonitor);
+
+        if (windowMonitor == nullptr) {
+            windowString = "window is fullscreen\nswitching to windowed mode";
+            glfwSetWindowMonitor(window, primaryMonitor, 0, 0, videoMode->width, videoMode->height, videoMode->refreshRate);
+        } else {
+            int monitorX, monitorY;
+            int windowWidth = videoMode->width / 1.5;
+            int windowHeight = windowWidth / ASPECT_RATIO[0] * ASPECT_RATIO[1];
+            glfwGetMonitorPos(primaryMonitor, &monitorX, &monitorY);
+
+            glfwSetWindowMonitor(window, nullptr, monitorX + (videoMode->width - windowWidth) / 2, monitorY + (videoMode->height - windowHeight) / 2, windowWidth, windowHeight, videoMode->refreshRate);
+        }
+
+        std::cout << windowString << std::endl;
     }
 }
 
