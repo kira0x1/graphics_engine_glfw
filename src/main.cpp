@@ -11,38 +11,63 @@
 
 #include <iostream>
 
-const unsigned int SCRN_WIDTH = 800;
-const unsigned int SCRN_HEIGHT = 600;
 
+const unsigned int ASPECT_RATIO[] = {16, 9};
+
+// CALLBACKS
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
-void setWireframeMode(int wireframeOn);
 void error_callback(int error, const char *description);
 
+void setWireframeMode(int wireframeOn);
 bool wireframeModeOn = false;
 
 int main() {
+
+    // glfw init
     glfwSetErrorCallback(error_callback);
     glfwInit();
+
+    int count;
+    int monitorX, monitorY;
+    int windowWidth, windowHeight;
+
+    GLFWmonitor **monitors = glfwGetMonitors(&count);
+    const GLFWvidmode *videoMode = glfwGetVideoMode(monitors[0]);
+    windowWidth = videoMode->width / 1.5;
+    windowHeight = windowWidth / ASPECT_RATIO[0] * ASPECT_RATIO[1];
+
+    glfwGetMonitorPos(monitors[0], &monitorX, &monitorY);
+
+    // WINDOW HINTS
+    // -----------
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+    // hide window until done setting up I.E changing position etc
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 
 #ifdef __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
+
     // Create Window
-    GLFWwindow *window = glfwCreateWindow(SCRN_WIDTH, SCRN_HEIGHT, "meow", nullptr, nullptr);
+    GLFWwindow *window = glfwCreateWindow(windowWidth, windowHeight, "meow", nullptr, nullptr);
     if (window == nullptr) {
         std::cout << "Failed to create glfw window!" << std::endl;
         glfwTerminate();
         return -1;
     }
 
+
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetKeyCallback(window, key_callback);
+    glfwSetWindowPos(window, monitorX + (videoMode->width - windowWidth) / 2, monitorY + (videoMode->height - windowHeight) / 2);
+    glfwSetWindowAspectRatio(window, 16, 9);
+    glfwShowWindow(window);
 
     // GLAD: Load OpenGL function pointers
     // -----------------------------------
@@ -51,7 +76,7 @@ int main() {
         return -1;
     }
 
-    glViewport(0, 0, SCRN_WIDTH, SCRN_HEIGHT);
+    glViewport(0, 0, windowWidth, windowHeight);
 
     glEnable(GL_DEPTH_TEST);
 
@@ -60,6 +85,7 @@ int main() {
 
     // -------------------- SHADER COMPILATION END---------------------------
     // @formatter:off
+    //<editor-fold desc="Vertices">
     float vertices[] = {
             -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
             0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
@@ -103,7 +129,7 @@ int main() {
             -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
             -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
     };
-    
+    //</editor-fold>
     
     // @formatter:on
 
@@ -171,7 +197,8 @@ int main() {
     while (!glfwWindowShouldClose(window)) {
         // RENDER
         // ------
-        glClearColor(0.3f, 0.25f, 0.3f, 1.0f);
+        // background color
+        glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // BIND TEXTURE
@@ -189,7 +216,7 @@ int main() {
         glm::mat4 projection = glm::mat4(1.0f);
 
         view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-        projection = glm::perspective(glm::radians(45.0f), (float) SCRN_WIDTH / (float) SCRN_HEIGHT, 0.1f, 100.0f);
+        projection = glm::perspective(glm::radians(45.0f), (float) windowWidth / (float) windowHeight, 0.1f, 100.0f);
 
         // pass matricies to shader
         ourShader.setMat4("view", view);
