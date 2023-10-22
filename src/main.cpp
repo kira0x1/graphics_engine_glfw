@@ -278,5 +278,5 @@ void setWireframeMode(int wireframeOn) {
 }
 
 void error_callback(int error, const char *description) {
-    fprintf(stderr, "Error: %s\n", description);
+    fprintf(stderr, "Error: Code: %d\nDescription: %s\n", error, description);
 }
