@@ -14,10 +14,24 @@
 
 const unsigned int ASPECT_RATIO[] = {16, 9};
 
+// TIMING
+// ------
+float deltaTime = 0.0f; // Time between current frame and last frame
+float lastFrame = 0.0f; // Time of last frame
+
+// CAMERA
+// ------
+const float CAMERA_SPEED = 5.0f;
+
+glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
 // CALLBACKS
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
 void error_callback(int error, const char *description);
+void processInput(GLFWwindow *window);
 
 void setWireframeMode(int wireframeOn);
 bool wireframeModeOn = false;
@@ -211,9 +225,18 @@ int main() {
     // RENDER LOOP :3
     // --------------
     while (!glfwWindowShouldClose(window)) {
+
+        // DELTA TIME
+        float currentFrame = glfwGetTime();
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
+
+
+        // INPUT
+        processInput(window);
+
         // RENDER
         // ------
-        // background color
         glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -226,26 +249,12 @@ int main() {
         // ---------------
         ourShader.use();
 
-        // CAMERA
-        // ------
-        glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
-        glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
-        glm::vec3 cameraDirection = glm::normalize(cameraPos - cameraTarget);
-
-        glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
-        glm::vec3 cameraRight = glm::normalize(glm::cross(up, cameraDirection));
-        glm::vec3 cameraUp = glm::cross(cameraDirection, cameraRight);
-
         // TRANSFORMATIONS
         // ---------------
-        const float radius = 10.0f;
-        float camX = sin(glfwGetTime()) * radius;
-        float camZ = cos(glfwGetTime()) * radius;
-        glm::mat4 view = glm::lookAt(glm::vec3(camX, 0.0, camZ), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
+
+        glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 
         glm::mat4 projection = glm::mat4(1.0f);
-
-        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
         projection = glm::perspective(glm::radians(45.0f), (float) windowWidth / (float) windowHeight, 0.1f, 100.0f);
 
         // pass matricies to shader
@@ -281,7 +290,7 @@ int main() {
 }
 
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
-    if (key == GLFW_KEY_W && action == GLFW_PRESS) {
+    if (key == GLFW_KEY_BACKSLASH && action == GLFW_PRESS) {
         wireframeModeOn = !wireframeModeOn;
         std::cout << "Setting wireframe mode: " << std::boolalpha << wireframeModeOn << std::endl;
         setWireframeMode(wireframeModeOn);
@@ -294,7 +303,6 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 
     int leftAltState = glfwGetKey(window, GLFW_KEY_LEFT_ALT);
     int enterState = glfwGetKey(window, GLFW_KEY_ENTER);
-
     if (leftAltState == GLFW_PRESS && enterState == GLFW_PRESS) {
         const char *windowString = "window is windowed\nswitching to fullscreen mode";
 
@@ -316,6 +324,23 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
         }
 
         std::cout << windowString << std::endl;
+    }
+}
+
+void processInput(GLFWwindow *window) {
+    float camSpeed = CAMERA_SPEED * deltaTime;
+
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+        cameraPos += camSpeed * cameraFront;
+    }
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+        cameraPos -= camSpeed * cameraFront;
+    }
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * camSpeed;
+    }
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+        cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * camSpeed;
     }
 }
 
