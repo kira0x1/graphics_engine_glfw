@@ -17,14 +17,23 @@ enum Camera_Movement {
     DOWN
 };
 
+// Scrollwheel mode
+enum SCROLL_MODE {
+    SCROLL_ZOOM,
+    SCROLL_SPEED
+};
+
 
 // Default camera values
 const float YAW = -90.0f;
 const float PITCH = 0.0f;
 const float SPEED = 2.5f;
-const float SENSITIVITY = 0.1f;
+const float MOUSE_SENSITIVITY = 0.1f;
+const float SCROLL_SENSTIVITY = 0.25f;
 const float ZOOM = 45.0f;
 
+const float MIN_SPEED = 1.0f;
+const float MAX_SPEED = 10.0f;
 
 // An abstract camera class that processes input and calculates the corresponding Euler Angles, Vectors and Matrices for use in OpenGL
 class Camera {
@@ -45,19 +54,23 @@ public:
     float MovementSpeed;
     float BoostMultiplier = 2.5f;
     float MouseSensitivity;
+    float ScrollSensitvity;
     float Zoom;
 
+    SCROLL_MODE ScrollMode = SCROLL_MODE::SCROLL_SPEED;
+
     // constructor with vectors
-    Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM) {
+    Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH, SCROLL_MODE scrollMode = SCROLL_MODE::SCROLL_SPEED) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(MOUSE_SENSITIVITY), Zoom(ZOOM), ScrollSensitvity(SCROLL_SENSTIVITY) {
         Position = position;
         WorldUp = up;
         Yaw = yaw;
         Pitch = pitch;
+        ScrollMode = scrollMode;
         updateCameraVectors();
     }
 
     // constructor with scalar values
-    Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM) {
+    Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(MOUSE_SENSITIVITY), Zoom(ZOOM) {
         Position = glm::vec3(posX, posY, posZ);
         WorldUp = glm::vec3(upX, upY, upZ);
         Yaw = yaw;
@@ -122,11 +135,17 @@ public:
 
     // processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
     void ProcessMouseScroll(float yoffset) {
-        Zoom -= (float) yoffset;
-        if (Zoom < 1.0f)
-            Zoom = 1.0f;
-        if (Zoom > 45.0f)
-            Zoom = 45.0f;
+        if (ScrollMode == SCROLL_MODE::SCROLL_ZOOM) {
+            Zoom -= (float) yoffset;
+            if (Zoom < 1.0f)
+                Zoom = 1.0f;
+            if (Zoom > 45.0f)
+                Zoom = 45.0f;
+        } else if (ScrollMode == SCROLL_MODE::SCROLL_SPEED) {
+            MovementSpeed += yoffset * ScrollSensitvity;
+            if (MovementSpeed < MIN_SPEED) MovementSpeed = MIN_SPEED;
+            else if (MovementSpeed > MAX_SPEED) MovementSpeed = MAX_SPEED;
+        }
     }
 
 private:
