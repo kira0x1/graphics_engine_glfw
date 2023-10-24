@@ -332,20 +332,18 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 }
 
 void processInput(GLFWwindow *window) {
-    const int vAxis = FORWARD_AXIS.getValue(window);
+    const int fwdAxis = FORWARD_AXIS.getValue(window);
     const int hAxis = HORIZONTAL_AXIS.getValue(window);
+    const int vAxis = VERTICAL_AXIS.getValue(window);
 
-    if (vAxis > 0) camera.Move(Camera_Movement::FORWARD, deltaTime);
-    else if (vAxis < 0) camera.Move(Camera_Movement::BACKWARD, deltaTime);
+    if (fwdAxis > 0) camera.Move(Camera_Movement::FORWARD, deltaTime);
+    else if (fwdAxis < 0) camera.Move(Camera_Movement::BACKWARD, deltaTime);
 
     if (hAxis > 0) camera.Move(Camera_Movement::LEFT, deltaTime);
     else if (hAxis < 0)camera.Move(Camera_Movement::RIGHT, deltaTime);
 
-    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
-        camera.Move(Camera_Movement::UP, deltaTime);
-    } else if (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS) {
-        camera.Move(Camera_Movement::DOWN, deltaTime);
-    }
+    if (vAxis > 0) camera.Move(Camera_Movement::UP, deltaTime);
+    else if (vAxis < 0) camera.Move(Camera_Movement::DOWN, deltaTime);
 
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
         camera.SetBoost(true);
