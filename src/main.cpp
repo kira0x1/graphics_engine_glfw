@@ -6,11 +6,12 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "headers/stb_image.h"
-#include "headers/SHADER.h"
+#include "stb_image.h"
+#include "includes/SHADER.h"
+#include "includes/INPUT.h"
+#include "includes/CAMERA.h"
 
 #include <iostream>
-
 
 const unsigned int ASPECT_RATIO[] = {16, 9};
 
@@ -21,35 +22,40 @@ float lastFrame = 0.0f; // Time of last frame
 
 // CAMERA
 // ------
-const float CAMERA_SPEED = 5.0f;
-
-glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
-glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+float lastX = 0.0f;
+float lastY = 0.0f;
+bool firstMouse = true;
 
 // CALLBACKS
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
 void error_callback(int error, const char *description);
+void mouse_callback(GLFWwindow *window, double xposIn, double yposIn);
+void scroll_callback(GLFWwindow *window, double xOffset, double yOffset);
 void processInput(GLFWwindow *window);
+void moveCamera(glm::vec3 mov);
 
 void setWireframeMode(int wireframeOn);
 bool wireframeModeOn = false;
 
 int main() {
 
-    // glfw init
+    // GLFW INIT
+    // --------
     glfwSetErrorCallback(error_callback);
     glfwInit();
 
     int count;
     int monitorX, monitorY;
-    int windowWidth, windowHeight;
 
     GLFWmonitor **monitors = glfwGetMonitors(&count);
     const GLFWvidmode *videoMode = glfwGetVideoMode(monitors[0]);
-    windowWidth = videoMode->width / 1.5;
-    windowHeight = windowWidth / ASPECT_RATIO[0] * ASPECT_RATIO[1];
+    const int SCRN_WDITH = videoMode->width / 1.5;
+    const int SCRN_HEIGHT = SCRN_WDITH / ASPECT_RATIO[0] * ASPECT_RATIO[1];
+
+    lastX = SCRN_WDITH / 2.0f;
+    lastY = SCRN_HEIGHT / 2.0f;
 
     glfwGetMonitorPos(monitors[0], &monitorX, &monitorY);
 
@@ -67,21 +73,22 @@ int main() {
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
-
     // Create Window
-    GLFWwindow *window = glfwCreateWindow(windowWidth, windowHeight, "meow", nullptr, nullptr);
+    GLFWwindow *window = glfwCreateWindow(SCRN_WDITH, SCRN_HEIGHT, "meow", nullptr, nullptr);
     if (window == nullptr) {
         std::cout << "Failed to create glfw window!" << std::endl;
         glfwTerminate();
         return -1;
     }
 
-
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetKeyCallback(window, key_callback);
-    glfwSetWindowPos(window, monitorX + (videoMode->width - windowWidth) / 2, monitorY + (videoMode->height - windowHeight) / 2);
+    glfwSetWindowPos(window, monitorX + (videoMode->width - SCRN_WDITH) / 2, monitorY + (videoMode->height - SCRN_HEIGHT) / 2);
     glfwSetWindowAspectRatio(window, 16, 9);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetScrollCallback(window, scroll_callback);
     glfwShowWindow(window);
 
     // set icons
@@ -106,61 +113,59 @@ int main() {
         return -1;
     }
 
-    glViewport(0, 0, windowWidth, windowHeight);
+    glViewport(0, 0, SCRN_WDITH, SCRN_HEIGHT);
 
     glEnable(GL_DEPTH_TEST);
 
     Shader ourShader("../../src/shaders/vertex_shader.glsl", "../../src/shaders/fragment_shader.glsl");
 
-
     // -------------------- SHADER COMPILATION END---------------------------
     // @formatter:off
     //<editor-fold desc="Vertices">
     float vertices[] = {
-            -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-            0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-            0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-            0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-            -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+        0.5f, -0.5f, -0.5f, 1.0f, 0.0f,
+        0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+        0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
 
-            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-            0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-            0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-            0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-            -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+        0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
+        0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
+        0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
+        -0.5f, 0.5f, 0.5f, 0.0f, 1.0f,
+        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
 
-            -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-            -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-            -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+        -0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+        -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
 
-            0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-            0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-            0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-            0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-            0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-            0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+        0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+        0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+        0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+        0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+        0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
 
-            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-            0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-            0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-            0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+        0.5f, -0.5f, -0.5f, 1.0f, 1.0f,
+        0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
+        0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
+        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
 
-            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-            0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-            0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-            0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-            -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
-    };
+        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
+        0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+        0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+        0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+        -0.5f, 0.5f, 0.5f, 0.0f, 0.0f,
+        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f};
     //</editor-fold>
-    
+
     // @formatter:on
 
     unsigned int VBO;
@@ -227,10 +232,10 @@ int main() {
     while (!glfwWindowShouldClose(window)) {
 
         // DELTA TIME
-        float currentFrame = glfwGetTime();
+        // ----------
+        float currentFrame = static_cast<float>(glfwGetTime());
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
-
 
         // INPUT
         processInput(window);
@@ -245,21 +250,20 @@ int main() {
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture1);
 
-        // activate shader
+        // ACTIVATE SHADER
         // ---------------
         ourShader.use();
 
         // TRANSFORMATIONS
         // ---------------
 
-        glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-
-        glm::mat4 projection = glm::mat4(1.0f);
-        projection = glm::perspective(glm::radians(45.0f), (float) windowWidth / (float) windowHeight, 0.1f, 100.0f);
-
-        // pass matricies to shader
-        ourShader.setMat4("view", view);
+        // pass projection matrix to shader
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float) SCRN_WDITH / (float) SCRN_HEIGHT, 0.1f, 100.0f);
         ourShader.setMat4("projection", projection);
+
+        // camera/view transformation
+        glm::mat4 view = camera.GetViewMatrix();
+        ourShader.setMat4("view", view);
 
         // render container
         glBindVertexArray(VAO);
@@ -267,13 +271,13 @@ int main() {
         for (unsigned int i = 0; i < cubePosLength; i++) {
             glm::mat4 model = glm::mat4(1.0f);
             model = glm::translate(model, cubePositions[i]);
+
             float angle = (i + 1) * 20.0f * glfwGetTime(); // NOLINT(*-narrowing-conversions)
             model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
             ourShader.setMat4("model", model);
 
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
-
 
         // swap buffers and handle I/O
         glfwSwapBuffers(window);
@@ -328,19 +332,25 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 }
 
 void processInput(GLFWwindow *window) {
-    float camSpeed = CAMERA_SPEED * deltaTime;
+    const int vAxis = FORWARD_AXIS.getValue(window);
+    const int hAxis = HORIZONTAL_AXIS.getValue(window);
 
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        cameraPos += camSpeed * cameraFront;
+    if (vAxis > 0) camera.Move(Camera_Movement::FORWARD, deltaTime);
+    else if (vAxis < 0) camera.Move(Camera_Movement::BACKWARD, deltaTime);
+
+    if (hAxis > 0) camera.Move(Camera_Movement::LEFT, deltaTime);
+    else if (hAxis < 0)camera.Move(Camera_Movement::RIGHT, deltaTime);
+
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+        camera.Move(Camera_Movement::UP, deltaTime);
+    } else if (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS) {
+        camera.Move(Camera_Movement::DOWN, deltaTime);
     }
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        cameraPos -= camSpeed * cameraFront;
-    }
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * camSpeed;
-    }
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-        cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * camSpeed;
+
+    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+        camera.SetBoost(true);
+    } else {
+        camera.SetBoost(false);
     }
 }
 
@@ -360,4 +370,27 @@ void setWireframeMode(int wireframeOn) {
 
 void error_callback(int error, const char *description) {
     fprintf(stderr, "Error: Code: %d\nDescription: %s\n", error, description);
+}
+
+void mouse_callback(GLFWwindow *window, double xposIn, double yposIn) {
+    float xpos = static_cast<float>(xposIn);
+    float ypos = static_cast<float>(yposIn);
+
+    if (firstMouse) {
+        lastX = xpos;
+        lastY = ypos;
+        firstMouse = false;
+    }
+
+    float xOffset = xpos - lastX;
+    float yOffset = lastY - ypos;
+
+    lastX = xpos;
+    lastY = ypos;
+
+    camera.ProcessMouseMovement(xOffset, yOffset);
+}
+
+void scroll_callback(GLFWwindow *window, double xOffset, double yOffset) {
+    camera.ProcessMouseScroll(yOffset);
 }

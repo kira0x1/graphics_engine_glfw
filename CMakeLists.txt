@@ -1,5 +1,5 @@
 ﻿cmake_minimum_required(VERSION 3.26)
-project(graphics_engine_glfw)
+project(kira_engine)
 
 set(CMAKE_CXX_STANDARD 17)
 
