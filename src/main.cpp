@@ -127,6 +127,7 @@ int main() {
     Shader lightShader("../../src/shaders/lit/diffuse_lit_vertex.glsl", "../../src/shaders/lit/diffuse_lit_fragment.glsl");
     Shader diffusePlaneShader("../../src/shaders/lit/lighting_vertex.glsl", "../../src/shaders/lit/lighting_fragment.glsl");
 
+
     // -------------------- SHADER COMPILATION END---------------------------
     // @formatter:off
     //<editor-fold desc="Vertices">
@@ -248,10 +249,26 @@ int main() {
         // ACTIVATE SHADER
         // ---------------
         diffuseLitShader.use();
-        diffuseLitShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
-        diffuseLitShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
-        diffuseLitShader.setVec3("lightPos", lightPos);
+        diffuseLitShader.setVec3("light.position", lightPos);
         diffuseLitShader.setVec3("viewPos", camera.Position);
+
+        // light properties
+        glm::vec3 lightColor; // = glm::vec3(1.0f, 1.0f, 1.0f);
+        lightColor.x = static_cast<float>(sin(glfwGetTime() * 2.0));
+        lightColor.y = static_cast<float>(sin(glfwGetTime() * 0.7));
+        lightColor.z = static_cast<float>(sin(glfwGetTime() * 1.3));
+
+        glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f); // decrease lights influence
+        glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f);
+        diffuseLitShader.setVec3("light.ambient", ambientColor);
+        diffuseLitShader.setVec3("light.diffuse", diffuseColor);
+        diffuseLitShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+
+        // material properties
+        diffuseLitShader.setVec3("material.ambient", 1.0f, 0.5f, 0.31f);
+        diffuseLitShader.setVec3("material.diffuse", 1.0f, 0.5f, 0.31f);
+        diffuseLitShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
+        diffuseLitShader.setFloat("material.shininess", 32.0f);
 
         // view / projection transformations
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float) SCRN_WDITH / (float) SCRN_HEIGHT, 0.1f, 100.0f);
@@ -269,10 +286,20 @@ int main() {
 
         // draw plane
         diffusePlaneShader.use();
-        diffusePlaneShader.setVec3("objectColor", 0.6f, 0.7f, 0.82f);
-        diffusePlaneShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
-        diffusePlaneShader.setVec3("lightPos", lightPos);
+        diffusePlaneShader.setVec3("light.position", lightPos);
         diffusePlaneShader.setVec3("viewPos", camera.Position);
+
+        // set light
+        diffusePlaneShader.setVec3("light.ambient", ambientColor);
+        diffusePlaneShader.setVec3("light.diffuse", diffuseColor);
+        diffusePlaneShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+
+        // set material
+        diffusePlaneShader.setVec3("material.ambient", 0.6f, 0.7f, 0.82f);
+        diffusePlaneShader.setVec3("material.diffuse", 0.6f, 0.7f, 0.82f);
+        diffusePlaneShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
+        diffusePlaneShader.setFloat("material.shininess", 32.0f);
+
         diffusePlaneShader.setMat4("projection", projection);
         diffusePlaneShader.setMat4("view", view);
 
@@ -316,7 +343,7 @@ int main() {
 }
 
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
-    if (key == GLFW_KEY_BACKSLASH && action == GLFW_PRESS) {
+    if (key == GLFW_KEY_GRAVE_ACCENT && action == GLFW_PRESS) {
         wireframeModeOn = !wireframeModeOn;
         std::cout << "Setting wireframe mode: " << std::boolalpha << wireframeModeOn << std::endl;
         setWireframeMode(wireframeModeOn);
