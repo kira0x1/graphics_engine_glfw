@@ -240,15 +240,18 @@ int main() {
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        // Move Light Around
+        lightPos.x = 1.0f + sin(glfwGetTime()) * 2.0f;
+        lightPos.y = sin(glfwGetTime() / 2.0f) * 1.0f;
+        lightPos.z = 1.0f + cos(glfwGetTime()) * 2.0f;
+
         // ACTIVATE SHADER
         // ---------------
         diffuseLitShader.use();
         diffuseLitShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
         diffuseLitShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
         diffuseLitShader.setVec3("lightPos", lightPos);
-
-        // TRANSFORMATIONS
-        // ---------------
+        diffuseLitShader.setVec3("viewPos", camera.Position);
 
         // view / projection transformations
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float) SCRN_WDITH / (float) SCRN_HEIGHT, 0.1f, 100.0f);
@@ -269,12 +272,14 @@ int main() {
         diffusePlaneShader.setVec3("objectColor", 0.6f, 0.7f, 0.82f);
         diffusePlaneShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
         diffusePlaneShader.setVec3("lightPos", lightPos);
-
+        diffusePlaneShader.setVec3("viewPos", camera.Position);
         diffusePlaneShader.setMat4("projection", projection);
         diffusePlaneShader.setMat4("view", view);
+
         model = glm::mat4(1.0f);
         model = glm::translate(model, planePos);
         model = glm::scale(model, glm::vec3(5.0f, 0.1f, 5.0f));
+
         diffusePlaneShader.setMat4("model", model);
 
         glBindVertexArray(planeVAO);
@@ -285,7 +290,9 @@ int main() {
         lightShader.use();
         lightShader.setMat4("projection", projection);
         lightShader.setMat4("view", view);
+
         model = glm::mat4(1.0f);
+
         model = glm::translate(model, lightPos);
         model = glm::scale(model, glm::vec3(0.2f));
         lightShader.setMat4("model", model);
