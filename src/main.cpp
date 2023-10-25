@@ -10,6 +10,7 @@
 #include "includes/SHADER.h"
 #include "includes/INPUT.h"
 #include "includes/CAMERA.h"
+#include "includes/MATERIAL.h"
 
 #include <iostream>
 
@@ -127,6 +128,7 @@ int main() {
     Shader lightShader("../../src/shaders/lit/diffuse_lit_vertex.glsl", "../../src/shaders/lit/diffuse_lit_fragment.glsl");
     Shader diffusePlaneShader("../../src/shaders/lit/lighting_vertex.glsl", "../../src/shaders/lit/lighting_fragment.glsl");
 
+    Material diffuseMaterial = Material(&diffuseLitShader);
 
     // -------------------- SHADER COMPILATION END---------------------------
     // @formatter:off
@@ -252,19 +254,15 @@ int main() {
         diffuseLitShader.setVec3("light.position", lightPos);
         diffuseLitShader.setVec3("viewPos", camera.Position);
 
-        // light properties
-        glm::vec3 lightColor; // = glm::vec3(1.0f, 1.0f, 1.0f);
-        lightColor.x = static_cast<float>(sin(glfwGetTime() * 2.0));
-        lightColor.y = static_cast<float>(sin(glfwGetTime() * 0.7));
-        lightColor.z = static_cast<float>(sin(glfwGetTime() * 1.3));
-
+        // light materialProperties
+        glm::vec3 lightColor = glm::vec3(0.8f, 0.5f, 0.7f);
         glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f); // decrease lights influence
         glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f);
         diffuseLitShader.setVec3("light.ambient", ambientColor);
         diffuseLitShader.setVec3("light.diffuse", diffuseColor);
         diffuseLitShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
 
-        // material properties
+        // material materialProperties
         diffuseLitShader.setVec3("material.ambient", 1.0f, 0.5f, 0.31f);
         diffuseLitShader.setVec3("material.diffuse", 1.0f, 0.5f, 0.31f);
         diffuseLitShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
