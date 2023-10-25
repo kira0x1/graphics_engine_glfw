@@ -1,4 +1,4 @@
 # OpenGL Graphics Programming
 
-using c++, cmake, and glfw
+using c++, cmake, and glfw<br/>
 ide: clion
