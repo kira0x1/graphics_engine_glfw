@@ -1,5 +1,5 @@
 ﻿cmake_minimum_required(VERSION 3.26)
-project(kira_engine)
+project(kira_source)
 
 set(CMAKE_CXX_STANDARD 17)
 
