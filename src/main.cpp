@@ -30,6 +30,9 @@ bool firstMouse = true;
 // lighting
 glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 
+// plane
+glm::vec3 planePos(0.0f, -0.6f, 0.0f);
+
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
 void error_callback(int error, const char *description);
@@ -120,8 +123,9 @@ int main() {
 
     glEnable(GL_DEPTH_TEST);
 
-    Shader lightingShader("../../src/shaders/lit/lighting_vertex.glsl", "../../src/shaders/lit/lighting_fragment.glsl");
-    Shader lightCubeShader("../../src/shaders/lit/diffuse_lit_vertex.glsl", "../../src/shaders/lit/diffuse_lit_fragment.glsl");
+    Shader diffuseLitShader("../../src/shaders/lit/lighting_vertex.glsl", "../../src/shaders/lit/lighting_fragment.glsl");
+    Shader lightShader("../../src/shaders/lit/diffuse_lit_vertex.glsl", "../../src/shaders/lit/diffuse_lit_fragment.glsl");
+    Shader diffusePlaneShader("../../src/shaders/lit/lighting_vertex.glsl", "../../src/shaders/lit/lighting_fragment.glsl");
 
     // -------------------- SHADER COMPILATION END---------------------------
     // @formatter:off
@@ -204,6 +208,19 @@ int main() {
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *) nullptr);
     glEnableVertexAttribArray(0);
 
+    // plane
+    unsigned int planeVAO;
+    glGenVertexArrays(1, &planeVAO);
+    glBindVertexArray(planeVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+    // plane position attribute 
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *) nullptr);
+    glEnableVertexAttribArray(0);
+
+    // plane normal attribute
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *) (3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
 
     // RENDER LOOP :3
     // --------------
@@ -225,10 +242,10 @@ int main() {
 
         // ACTIVATE SHADER
         // ---------------
-        lightingShader.use();
-        lightingShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
-        lightingShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
-        lightingShader.setVec3("lightPos", lightPos);
+        diffuseLitShader.use();
+        diffuseLitShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
+        diffuseLitShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+        diffuseLitShader.setVec3("lightPos", lightPos);
 
         // TRANSFORMATIONS
         // ---------------
@@ -236,25 +253,42 @@ int main() {
         // view / projection transformations
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float) SCRN_WDITH / (float) SCRN_HEIGHT, 0.1f, 100.0f);
         glm::mat4 view = camera.GetViewMatrix();
-        lightingShader.setMat4("projection", projection);
-        lightingShader.setMat4("view", view);
+        diffuseLitShader.setMat4("projection", projection);
+        diffuseLitShader.setMat4("view", view);
 
         // world transformations
         glm::mat4 model = glm::mat4(1.0f);
-        lightingShader.setMat4("model", model);
+        diffuseLitShader.setMat4("model", model);
 
         // render the cube
         glBindVertexArray(cubeVAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
+        // draw plane
+        diffusePlaneShader.use();
+        diffusePlaneShader.setVec3("objectColor", 0.6f, 0.7f, 0.82f);
+        diffusePlaneShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+        diffusePlaneShader.setVec3("lightPos", lightPos);
+
+        diffusePlaneShader.setMat4("projection", projection);
+        diffusePlaneShader.setMat4("view", view);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, planePos);
+        model = glm::scale(model, glm::vec3(5.0f, 0.1f, 5.0f));
+        diffusePlaneShader.setMat4("model", model);
+
+        glBindVertexArray(planeVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+
+
         // draw lamp object
-        lightCubeShader.use();
-        lightCubeShader.setMat4("projection", projection);
-        lightCubeShader.setMat4("view", view);
+        lightShader.use();
+        lightShader.setMat4("projection", projection);
+        lightShader.setMat4("view", view);
         model = glm::mat4(1.0f);
         model = glm::translate(model, lightPos);
         model = glm::scale(model, glm::vec3(0.2f));
-        lightCubeShader.setMat4("model", model);
+        lightShader.setMat4("model", model);
 
         glBindVertexArray(lightCubeVAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);

@@ -11,7 +11,9 @@ uniform mat4 projection;
 
 void main() {
     FragPos = vec3(model * vec4(aPos, 1.0));
-    Normal = aNormal;
+
+    // transposing and inversing is inneficient on a shader and should be done on the cpu and then sent to the shader instead
+    Normal = mat3(transpose(inverse(model))) * aNormal;
 
     gl_Position = projection * view * vec4(FragPos, 1.0);
 }
