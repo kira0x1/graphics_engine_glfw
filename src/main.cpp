@@ -21,7 +21,7 @@ float lastFrame = 0.0f; // Time of last frame
 
 // CAMERA
 // ------
-Camera camera(glm::vec3(0.0f, 1.2f, 1.5f));
+Camera camera(glm::vec3(5.0f, 3.3f, 4.4f), glm::vec3(0.0f, 1.0f, 0.0f), -140.0f, -33.4f);
 float lastX = 0.0f;
 float lastY = 0.0f;
 bool firstMouse = true;
@@ -230,7 +230,7 @@ int main() {
     glEnableVertexAttribArray(1);
 
     unsigned int diffuseMap = loadTexture("../../resources/textures/container2.png");
-    unsigned int specularMap = loadTexture("../../resources/textures/reese_spec.png");
+    unsigned int specularMap = loadTexture("../../resources/textures/container2_specular.png");
 
 // RENDER LOOP :3
 // --------------
@@ -257,7 +257,7 @@ int main() {
         diffuseLitShader.setVec3("light.position", lightPos);
         diffuseLitShader.setVec3("viewPos", camera.Position);
 
-// light properties
+// cube light properties
         glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
         glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f); // decrease lights influence
         glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f);
@@ -265,7 +265,8 @@ int main() {
         diffuseLitShader.setVec3("light.diffuse", diffuseColor);
         diffuseLitShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
 
-// material properties
+// cube material properties
+        diffuseLitShader.setVec3("material.color", glm::vec3(1.0f));
         diffuseLitShader.setInt("material.specular", 1.0f);
         diffuseLitShader.setFloat("material.shininess", 64.0f);
 
@@ -293,15 +294,13 @@ int main() {
         diffusePlaneShader.setVec3("light.position", lightPos);
         diffusePlaneShader.setVec3("viewPos", camera.Position);
 
-// set light
+// set plane light
         diffusePlaneShader.setVec3("light.ambient", ambientColor);
         diffusePlaneShader.setVec3("light.diffuse", diffuseColor);
         diffusePlaneShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
 
-// set material
-        diffusePlaneShader.setVec3("material.ambient", 0.6f, 0.7f, 0.82f);
-        diffusePlaneShader.setVec3("material.diffuse", 0.6f, 0.7f, 0.82f);
-        diffusePlaneShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
+// set plane material
+        diffusePlaneShader.setVec3("material.color", 0.5f, 1.0f, 0.5f);
         diffusePlaneShader.setFloat("material.shininess", 32.0f);
 
         diffusePlaneShader.setMat4("projection", projection);
@@ -323,9 +322,9 @@ int main() {
         lightShader.setMat4("view", view);
 
         model = glm::mat4(1.0f);
-
         model = glm::translate(model, lightPos);
-        model = glm::scale(model, glm::vec3(0.2f));
+        model = glm::scale(model, glm::vec3(0.05f));
+
         lightShader.setMat4("model", model);
 
         glBindVertexArray(lightCubeVAO);

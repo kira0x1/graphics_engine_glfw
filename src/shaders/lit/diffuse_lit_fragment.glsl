@@ -3,6 +3,7 @@
 out vec4 FragColor;
 
 struct Material {
+    vec3 color;
     sampler2D diffuse;
     sampler2D specular;
     float shininess;
@@ -35,7 +36,7 @@ void main()
     // we use the max function because if the angle between the 2 vectors 
     // are greater than 90 degrees than the dot product will be negative
     float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = light.diffuse * diff * vec3(texture(material.diffuse, TexCoords));
+    vec3 diffuse = material.color * (light.diffuse * diff * vec3(texture(material.diffuse, TexCoords)));
 
     // specular
     float specularStrength = 0.5;
