@@ -125,9 +125,7 @@ int main() {
     glEnable(GL_DEPTH_TEST);
 
     Shader diffuseLitShader("../../src/shaders/lit/diffuse_lit_vertex.glsl", "../../src/shaders/lit/diffuse_lit_fragment.glsl");
-    Shader lightShader("../../src/shaders/lit/basic_lit_vertex.glsl", "../../src/shaders/lit/basic_lit_fragment.glsl");
-    Shader diffusePlaneShader("../../src/shaders/lit/diffuse_lit_vertex.glsl", "../../src/shaders/lit/diffuse_lit_fragment.glsl");
-
+    Shader lightingShader("../../src/shaders/lit/basic_lit_vertex.glsl", "../../src/shaders/lit/basic_lit_fragment.glsl");
 
     // -------------------- SHADER COMPILATION END---------------------------
     // @formatter:off
@@ -185,6 +183,14 @@ int main() {
     unsigned int VBO;
     unsigned int cubeVAO;
 
+    // positions of the point lights
+    glm::vec3 pointLightPositions[] = {
+            glm::vec3(0.7f, 0.2f, 2.0f),
+            glm::vec3(2.3f, -3.3f, -4.0f),
+            glm::vec3(-4.0f, 2.0f, -12.0f),
+            glm::vec3(0.0f, 0.0f, -3.0f)
+    };
+
     glGenVertexArrays(1, &cubeVAO);
     glGenBuffers(1, &VBO);
 
@@ -193,20 +199,20 @@ int main() {
 
     glBindVertexArray(cubeVAO);
 
-// position attribute
+    // position attribute
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *) nullptr);
     glEnableVertexAttribArray(0);
 
-// normal attribute
+    // normal attribute
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *) (3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-// texture attribute
+    // texture attribute
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *) (6 * sizeof(float)));
     glEnableVertexAttribArray(2);
 
 
-// second, configure the light's VAO (VBO stays the same; the vertices are the same for the light object which is also a 3D cube)
+    // second, configure the light's VAO (VBO stays the same; the vertices are the same for the light object which is also a 3D cube)
     unsigned int lightCubeVAO;
     glGenVertexArrays(1, &lightCubeVAO);
     glBindVertexArray(lightCubeVAO);
@@ -215,20 +221,6 @@ int main() {
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *) nullptr);
     glEnableVertexAttribArray(0);
-
-// plane
-    unsigned int planeVAO;
-    glGenVertexArrays(1, &planeVAO);
-    glBindVertexArray(planeVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-// plane position attribute 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *) nullptr);
-    glEnableVertexAttribArray(0);
-
-// plane normal attribute
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *) (3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
 
     unsigned int diffuseMap = loadTexture("../../resources/textures/container2.png");
     unsigned int specularMap = loadTexture("../../resources/textures/container2_specular.png");
@@ -247,60 +239,103 @@ int main() {
     };
 
     // RENDER LOOP :3
-// --------------
+    // --------------
     while (!glfwWindowShouldClose(window)) {
 
-// DELTA TIME
-// ----------
+        // DELTA TIME
+        // ----------
         float currentFrame = static_cast<float>(glfwGetTime());
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
-// INPUT
+        // INPUT
         processInput(window);
 
-// RENDER
-// ------
+        // RENDER
+        // ------
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
-// ACTIVATE SHADER
-// ---------------
+        // be sure to activate shader when setting uniforms/drawing objects
         diffuseLitShader.use();
-        diffuseLitShader.setVec3("light.direction", lightDir);
         diffuseLitShader.setVec3("viewPos", camera.Position);
+        diffuseLitShader.setFloat("material.shininess", 32.0f);
 
-// cube light properties
-        glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
-        glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f); // decrease lights influence
-        glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f);
-        diffuseLitShader.setVec3("light.ambient", ambientColor);
-        diffuseLitShader.setVec3("light.diffuse", diffuseColor);
-        diffuseLitShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+        /*
+           Here we set all the uniforms for the 5/6 types of lights we have. We have to set them manually and index 
+           the proper PointLight struct in the array to set each uniform variable. This can be done more code-friendly
+           by defining light types as classes and set their values in there, or by using a more efficient uniform approach
+           by using 'Uniform buffer objects', but that is something we'll discuss in the 'Advanced GLSL' tutorial.
+        */
+        // directional light
+        diffuseLitShader.setVec3("dirLight.direction", -0.2f, -1.0f, -0.3f);
+        diffuseLitShader.setVec3("dirLight.ambient", 0.05f, 0.05f, 0.05f);
+        diffuseLitShader.setVec3("dirLight.diffuse", 0.4f, 0.4f, 0.4f);
+        diffuseLitShader.setVec3("dirLight.specular", 0.5f, 0.5f, 0.5f);
+        // point light 1
+        diffuseLitShader.setVec3("pointLights[0].position", pointLightPositions[0]);
+        diffuseLitShader.setVec3("pointLights[0].ambient", 0.05f, 0.05f, 0.05f);
+        diffuseLitShader.setVec3("pointLights[0].diffuse", 0.8f, 0.8f, 0.8f);
+        diffuseLitShader.setVec3("pointLights[0].specular", 1.0f, 1.0f, 1.0f);
+        diffuseLitShader.setFloat("pointLights[0].constant", 1.0f);
+        diffuseLitShader.setFloat("pointLights[0].linear", 0.09f);
+        diffuseLitShader.setFloat("pointLights[0].quadratic", 0.032f);
+        // point light 2
+        diffuseLitShader.setVec3("pointLights[1].position", pointLightPositions[1]);
+        diffuseLitShader.setVec3("pointLights[1].ambient", 0.05f, 0.05f, 0.05f);
+        diffuseLitShader.setVec3("pointLights[1].diffuse", 0.8f, 0.8f, 0.8f);
+        diffuseLitShader.setVec3("pointLights[1].specular", 1.0f, 1.0f, 1.0f);
+        diffuseLitShader.setFloat("pointLights[1].constant", 1.0f);
+        diffuseLitShader.setFloat("pointLights[1].linear", 0.09f);
+        diffuseLitShader.setFloat("pointLights[1].quadratic", 0.032f);
+        // point light 3
+        diffuseLitShader.setVec3("pointLights[2].position", pointLightPositions[2]);
+        diffuseLitShader.setVec3("pointLights[2].ambient", 0.05f, 0.05f, 0.05f);
+        diffuseLitShader.setVec3("pointLights[2].diffuse", 0.8f, 0.8f, 0.8f);
+        diffuseLitShader.setVec3("pointLights[2].specular", 1.0f, 1.0f, 1.0f);
+        diffuseLitShader.setFloat("pointLights[2].constant", 1.0f);
+        diffuseLitShader.setFloat("pointLights[2].linear", 0.09f);
+        diffuseLitShader.setFloat("pointLights[2].quadratic", 0.032f);
+        // point light 4
+        diffuseLitShader.setVec3("pointLights[3].position", pointLightPositions[3]);
+        diffuseLitShader.setVec3("pointLights[3].ambient", 0.05f, 0.05f, 0.05f);
+        diffuseLitShader.setVec3("pointLights[3].diffuse", 0.8f, 0.8f, 0.8f);
+        diffuseLitShader.setVec3("pointLights[3].specular", 1.0f, 1.0f, 1.0f);
+        diffuseLitShader.setFloat("pointLights[3].constant", 1.0f);
+        diffuseLitShader.setFloat("pointLights[3].linear", 0.09f);
+        diffuseLitShader.setFloat("pointLights[3].quadratic", 0.032f);
+        // spotLight
+        diffuseLitShader.setBool("spotLight.lightOn", false);
+        diffuseLitShader.setVec3("spotLight.position", camera.Position);
+        diffuseLitShader.setVec3("spotLight.direction", camera.Front);
+        diffuseLitShader.setVec3("spotLight.ambient", 0.0f, 0.0f, 0.0f);
+        diffuseLitShader.setVec3("spotLight.diffuse", 1.0f, 1.0f, 1.0f);
+        diffuseLitShader.setVec3("spotLight.specular", 1.0f, 1.0f, 1.0f);
+        diffuseLitShader.setFloat("spotLight.constant", 1.0f);
+        diffuseLitShader.setFloat("spotLight.linear", 0.09f);
+        diffuseLitShader.setFloat("spotLight.quadratic", 0.032f);
+        diffuseLitShader.setFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
+        diffuseLitShader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(15.0f)));
 
-// cube material properties
-        diffuseLitShader.setVec3("material.color", glm::vec3(1.0f));
-        diffuseLitShader.setInt("material.specular", 1.0f);
-        diffuseLitShader.setFloat("material.shininess", 64.0f);
-
-// view / projection transformations
+        // view / projection transformations
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float) SCRN_WDITH / (float) SCRN_HEIGHT, 0.1f, 100.0f);
         glm::mat4 view = camera.GetViewMatrix();
         diffuseLitShader.setMat4("projection", projection);
         diffuseLitShader.setMat4("view", view);
 
+        // world transformation
         glm::mat4 model = glm::mat4(1.0f);
         diffuseLitShader.setMat4("model", model);
 
-// render the cube
+        // bind diffuse map
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, diffuseMap);
+
+        // bind specular map
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, specularMap);
 
         glBindVertexArray(cubeVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
 
         for (unsigned int i = 0; i < 10; i++) {
             model = glm::mat4(1.0f);
@@ -308,52 +343,27 @@ int main() {
             float angle = 20.0f * i;
             model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
             diffuseLitShader.setMat4("model", model);
+
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
 
-// draw plane
-        diffusePlaneShader.use();
-//        diffusePlaneShader.setVec3("light.position", lightPos);
-        diffusePlaneShader.setVec3("light.direction", lightDir);
-        diffusePlaneShader.setVec3("viewPos", camera.Position);
 
-// set plane light
-        diffusePlaneShader.setVec3("light.ambient", ambientColor);
-        diffusePlaneShader.setVec3("light.diffuse", diffuseColor);
-        diffusePlaneShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+        // also draw the lamp object(s)
+        lightingShader.use();
+        lightingShader.setMat4("projection", projection);
+        lightingShader.setMat4("view", view);
 
-// set plane material
-        diffusePlaneShader.setVec3("material.color", 0.5f, 1.0f, 0.5f);
-        diffusePlaneShader.setFloat("material.shininess", 32.0f);
-
-        diffusePlaneShader.setMat4("projection", projection);
-        diffusePlaneShader.setMat4("view", view);
-
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, planePos);
-        model = glm::scale(model, glm::vec3(5.0f, 0.1f, 5.0f));
-
-        diffusePlaneShader.setMat4("model", model);
-
-        glBindVertexArray(planeVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-
-
-// draw lamp object
-        lightShader.use();
-        lightShader.setMat4("projection", projection);
-        lightShader.setMat4("view", view);
-
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, lightPos);
-        model = glm::scale(model, glm::vec3(0.05f));
-
-        lightShader.setMat4("model", model);
-
+        // we now draw as many light bulbs as we have point lights.
         glBindVertexArray(lightCubeVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        for (unsigned int i = 0; i < 4; i++) { // NOLINT(*-loop-convert)
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, pointLightPositions[i]);
+            model = glm::scale(model, glm::vec3(0.2f)); // Make it a smaller cube
+            lightingShader.setMat4("model", model);
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
 
-// swap buffers and handle I/O
+        // swap buffers and handle I/O
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
