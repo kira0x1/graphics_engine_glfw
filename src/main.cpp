@@ -9,6 +9,7 @@
 #include "includes/SHADER.h"
 #include "includes/INPUT.h"
 #include "includes/CAMERA.h"
+#include "level_editor.h"
 
 #include <iostream>
 
@@ -45,6 +46,9 @@ unsigned int loadTexture(const char *path);
 bool wireframeModeOn = false;
 
 int main() {
+
+    LevelEditor *level = new LevelEditor("../../resources/level.txt");
+    std::cout << "Level\n\n" << *level->getLevelCode() << "\n";
 
     // GLFW INIT
     // --------
